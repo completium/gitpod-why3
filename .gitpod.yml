@@ -8,5 +8,5 @@ ports:
   onOpen: open-browser
 vscode:
   extensions:
-    - edukera.archetype@0.38.0
+    - edukera.archetype@0.41.0
     - baking-bad.michelson@0.1.0
