@@ -1,0 +1,731 @@
+module Fa12_storage
+  use archetype.Lib
+
+  use list.List as L
+
+  use archetype.Field as F
+
+  use archetype.View as V
+
+  type _asset =
+   | AAllowance
+   | ALedger
+
+  type _entry =
+   | EGetAllowance
+   | EGetBalance
+   | EGetTotalSupply
+   | ETransfer
+   | EApprove
+
+  type _field =
+   | FTotalsupply
+   | FAddr_owner_addr_spender
+   | FAmount
+   | FHolder
+   | FTokens
+
+  clone archetype.Trace as Tr with type _asset = _asset,
+                                   type _entry = _entry,
+                                   type _field = _field
+
+  let function eq_list0 (e1 : operation) (e2 : operation) : bool
+  = _eq_operation (e1) (e2)
+
+  clone archetype.List as List0 with type t = operation,
+                                     val eqt = eq_list0
+
+  exception Fail1 arstring
+
+  exception Fail2 (arstring, (nat, nat))
+
+  exception Fail3 (arstring, nat)
+
+  type allowance = {
+    addr_owner_addr_spender : (address, address);
+    amount : nat
+  }
+
+  let function eq_allowance_key (k1 : (address, address)) (k2 : (address, address)) : bool
+  = match (k1 , k2) with
+    | ((k10),(k11)),((k20),(k21)) -> if ((str_eq k10 k20) && (str_eq k11 k21)) then begin
+                                       true
+                                     end else begin
+                                       false
+                                     end
+    |( _),( _) -> false
+    end
+
+  let function le_allowance_key (k1 : (address, address)) (k2 : (address, address)) : bool
+  = match (k1 , k2) with
+    | ((k10),(k11)),((k20),(k21)) -> if ((str_le k11 k21) && (str_le k10 k20)) then begin
+                                       true
+                                     end else begin
+                                       false
+                                     end
+    |( _),( _) -> false
+    end
+
+  let function eq_allowance (a1 : allowance) (a2 : allowance) : bool
+  = (let a1_addr_owner_addr_spender = a1.addr_owner_addr_spender in
+    let a2_addr_owner_addr_spender = a2.addr_owner_addr_spender in
+    match (a1_addr_owner_addr_spender , a2_addr_owner_addr_spender) with
+    | ((a1_addr_owner_addr_spender0),(a1_addr_owner_addr_spender1)),((a2_addr_owner_addr_spender0),(a2_addr_owner_addr_spender1)) ->
+    if ((str_eq a1_addr_owner_addr_spender0 a2_addr_owner_addr_spender0) && (str_eq a1_addr_owner_addr_spender1 a2_addr_owner_addr_spender1)) then begin
+      true
+    end else begin
+      false
+    end
+    |( _),( _) -> false
+    end && let a1_amount = a1.amount in
+    let a2_amount = a2.amount in
+    a1_amount = a2_amount)
+
+  let mk_default_allowance () : allowance
+  = {
+      addr_owner_addr_spender = (0 , 0);
+      amount = 0
+    }
+
+  clone archetype.View as View_allowance with type tk = (address, address),
+                                              val eqk = eq_allowance_key
+
+  clone archetype.Field as Field_allowance with type tk = (address, address),
+                                                val eqk = eq_allowance_key,
+                                                val lek = le_allowance_key,
+                                                type view = View_allowance.view,
+                                                val vmk = View_allowance.mk,
+                                                val velts = View_allowance.elts,
+                                                val vcontains = View_allowance.contains
+
+  clone archetype.Collection as Allowance with type tk = (address, address),
+                                               val eqk = eq_allowance_key,
+                                               val lek = le_allowance_key,
+                                               type t = allowance,
+                                               val keyt = addr_owner_addr_spender,
+                                               val eqt = eq_allowance,
+                                               type view = View_allowance.view,
+                                               val vmk = View_allowance.mk,
+                                               val velts = View_allowance.elts,
+                                               val vcontains = View_allowance.contains,
+                                               val vcard = View_allowance.card,
+                                               type field = Field_allowance.field,
+                                               val felts = Field_allowance.elts,
+                                               val fcontains = Field_allowance.contains
+
+  type ledger = {
+    holder : address;
+    tokens : nat
+  }
+
+  let function eq_ledger_key (k1 : address) (k2 : address) : bool
+  = str_eq k1 k2
+
+  let function le_ledger_key (k1 : address) (k2 : address) : bool
+  = str_le k1 k2
+
+  let function eq_ledger (a1 : ledger) (a2 : ledger) : bool
+  = (let a1_holder = a1.holder in
+    let a2_holder = a2.holder in
+    str_eq a1_holder a2_holder && let a1_tokens = a1.tokens in
+    let a2_tokens = a2.tokens in
+    a1_tokens = a2_tokens)
+
+  let mk_default_ledger () : ledger
+  = {
+      holder = 0;
+      tokens = 0
+    }
+
+  clone archetype.View as View_ledger with type tk = address,
+                                           val eqk = eq_ledger_key
+
+  clone archetype.Field as Field_ledger with type tk = address,
+                                             val eqk = eq_ledger_key,
+                                             val lek = le_ledger_key,
+                                             type view = View_ledger.view,
+                                             val vmk = View_ledger.mk,
+                                             val velts = View_ledger.elts,
+                                             val vcontains = View_ledger.contains
+
+  clone archetype.Collection as Ledger with type tk = address,
+                                            val eqk = eq_ledger_key,
+                                            val lek = le_ledger_key,
+                                            type t = ledger,
+                                            val keyt = holder,
+                                            val eqt = eq_ledger,
+                                            type view = View_ledger.view,
+                                            val vmk = View_ledger.mk,
+                                            val velts = View_ledger.elts,
+                                            val vcontains = View_ledger.contains,
+                                            val vcard = View_ledger.card,
+                                            type field = Field_ledger.field,
+                                            val felts = Field_ledger.elts,
+                                            val fcontains = Field_ledger.contains
+
+  let function get_ledger_sum1 (a : ledger) : int
+  = a.tokens
+
+  clone archetype.Sum as LedgerSum1 with type collection = Ledger.collection,
+                                         type view = View_ledger.view,
+                                         type t = ledger,
+                                         type tk = address,
+                                         val field = get_ledger_sum1,
+                                         val view_to_list = Ledger.view_to_list,
+                                         val to_view = Ledger.to_view,
+                                         val empty = View_ledger.empty,
+                                         val contains = View_ledger.contains,
+                                         val nth = View_ledger.nth,
+                                         val head = View_ledger.head,
+                                         val tail = View_ledger.tail,
+                                         val card = View_ledger.card,
+                                         val add = Ledger.add,
+                                         val remove = Ledger.remove,
+                                         val set = Ledger.set,
+                                         val get = Ledger.get,
+                                         val keyt = holder
+
+  type _storage = {
+    mutable totalsupply : nat;
+    mutable _allowance_assets : Allowance.collection;
+    mutable _allowance_assets_added : Allowance.collection;
+    mutable _allowance_assets_removed : Allowance.collection;
+    mutable _ledger_assets : Ledger.collection;
+    mutable _ledger_assets_added : Ledger.collection;
+    mutable _ledger_assets_removed : Ledger.collection;
+    mutable _ops : L.list operation;
+    mutable _balance : tez;
+    _transferred : tez;
+    _caller : address;
+    _source : address;
+    _now : date;
+    _chainid : chain_id;
+    _selfaddress : address;
+    _entry : option _entry;
+    mutable _tr : Tr._traces
+  } invariant {
+    [@expl:s1]
+    (LedgerSum1.sum (Ledger.to_view _ledger_assets) _ledger_assets) = totalsupply
+  } by {
+    totalsupply = 10000000;
+    _allowance_assets = Allowance.from_list (L.Nil);
+    _allowance_assets_added = Allowance.empty;
+    _allowance_assets_removed = Allowance.empty;
+    _ledger_assets = Ledger.from_list (L.Cons ({
+      holder = 226276855972808949309861518670779653651542546507434529233699880023314129903569954303559;
+      tokens = 10000000
+    }) (L.Nil));
+    _ledger_assets_added = Ledger.empty;
+    _ledger_assets_removed = Ledger.empty;
+    _ops = L.Nil;
+    _balance = 0;
+    _transferred = 0;
+    _caller = 0;
+    _source = 0;
+    _now = 0;
+    _chainid = 0;
+    _selfaddress = 0;
+    _entry = None;
+    _tr = L.Nil
+  }
+
+  let function _cp_storage (_s_storage : _storage) : _storage
+  ensures {
+    [@expl:cp_1]
+    result = _s_storage
+  }
+  = {
+      totalsupply = _s_storage.totalsupply;
+      _allowance_assets = _s_storage._allowance_assets;
+      _allowance_assets_added = _s_storage._allowance_assets_added;
+      _allowance_assets_removed = _s_storage._allowance_assets_removed;
+      _ledger_assets = _s_storage._ledger_assets;
+      _ledger_assets_added = _s_storage._ledger_assets_added;
+      _ledger_assets_removed = _s_storage._ledger_assets_removed;
+      _ops = _s_storage._ops;
+      _balance = _s_storage._balance;
+      _transferred = _s_storage._transferred;
+      _caller = _s_storage._caller;
+      _source = _s_storage._source;
+      _now = _s_storage._now;
+      _chainid = _s_storage._chainid;
+      _selfaddress = _s_storage._selfaddress;
+      _entry = _s_storage._entry;
+      _tr = _s_storage._tr
+    }
+
+  val ref _s : _storage
+end
+module Fa12
+  use archetype.Lib
+
+  use list.List as L
+
+  use Fa12_storage
+
+  let getAllowance (owner : address) (spender : address) (_cb : contract) : unit
+  requires {
+    [@expl:entry_require]
+    _s._entry = (Some EGetAllowance)
+  }
+  requires {
+   [@expl:empty_ops]
+   _s._ops = L.Nil
+  }
+  requires {
+   [@expl:empty_trace]
+   _s._tr = L.Nil
+  }
+  requires {
+   [@expl:require_allowance_added_isempty]
+   Allowance.is_empty _s._allowance_assets_added
+  }
+  requires {
+   [@expl:allowance_removed_isempty]
+   Allowance.is_empty _s._allowance_assets_removed
+  }
+  requires {
+   [@expl:require_ledger_added_isempty]
+   Ledger.is_empty _s._ledger_assets_added
+  }
+  requires {
+   [@expl:ledger_removed_isempty]
+   Ledger.is_empty _s._ledger_assets_removed
+  }
+  ensures {
+    [@expl:getallowance_p1]
+    (List0.card _s._ops) = 1
+  }
+  ensures {
+    [@expl:getallowance_p2]
+    ((Ledger.eq _s._ledger_assets (old _s)._ledger_assets) && (Allowance.eq _s._allowance_assets (old _s)._allowance_assets))
+  }
+  = let _s_init = _cp_storage (_s) in
+    _s._ops <- L.Cons (_mk_operation (_s._transferred) (_cb) (L.Nil)) _s._ops
+
+  let getBalance (owner : address) (_cb : contract) : unit
+  requires {
+    [@expl:entry_require]
+    _s._entry = (Some EGetBalance)
+  }
+  requires {
+   [@expl:empty_ops]
+   _s._ops = L.Nil
+  }
+  requires {
+   [@expl:empty_trace]
+   _s._tr = L.Nil
+  }
+  requires {
+   [@expl:require_allowance_added_isempty]
+   Allowance.is_empty _s._allowance_assets_added
+  }
+  requires {
+   [@expl:allowance_removed_isempty]
+   Allowance.is_empty _s._allowance_assets_removed
+  }
+  requires {
+   [@expl:require_ledger_added_isempty]
+   Ledger.is_empty _s._ledger_assets_added
+  }
+  requires {
+   [@expl:ledger_removed_isempty]
+   Ledger.is_empty _s._ledger_assets_removed
+  }
+  ensures {
+    [@expl:getbalance_p1]
+    (List0.card _s._ops) = 1
+  }
+  ensures {
+    [@expl:getbalance_p2]
+    ((Ledger.eq _s._ledger_assets (old _s)._ledger_assets) && (Allowance.eq _s._allowance_assets (old _s)._allowance_assets))
+  }
+  = let _s_init = _cp_storage (_s) in
+    _s._ops <- L.Cons (_mk_operation (_s._transferred) (_cb) (L.Nil)) _s._ops
+
+  let getTotalSupply (_cb : contract) : unit
+  requires {
+    [@expl:entry_require]
+    _s._entry = (Some EGetTotalSupply)
+  }
+  requires {
+   [@expl:empty_ops]
+   _s._ops = L.Nil
+  }
+  requires {
+   [@expl:empty_trace]
+   _s._tr = L.Nil
+  }
+  requires {
+   [@expl:require_allowance_added_isempty]
+   Allowance.is_empty _s._allowance_assets_added
+  }
+  requires {
+   [@expl:allowance_removed_isempty]
+   Allowance.is_empty _s._allowance_assets_removed
+  }
+  requires {
+   [@expl:require_ledger_added_isempty]
+   Ledger.is_empty _s._ledger_assets_added
+  }
+  requires {
+   [@expl:ledger_removed_isempty]
+   Ledger.is_empty _s._ledger_assets_removed
+  }
+  ensures {
+    [@expl:gettotalsupply_p1]
+    (List0.card _s._ops) = 1
+  }
+  ensures {
+    [@expl:gettotalsupply_p2]
+    ((Ledger.eq _s._ledger_assets (old _s)._ledger_assets) && (Allowance.eq _s._allowance_assets (old _s)._allowance_assets))
+  }
+  = let _s_init = _cp_storage (_s) in
+    _s._ops <- L.Cons (_mk_operation (_s._transferred) (_cb) (L.Nil)) _s._ops
+
+  let transfer (from : address) (_to : address) (value : nat) : unit
+  raises { Fail1 }
+  raises { Fail2 }
+  raises { NegAssignNat }
+  raises { NotFound }
+  raises { KeyExist }
+  raises {
+   Fail1 msg ->
+   [@expl:f0]
+   match Ledger.get from _s._ledger_assets with
+   | Some after_ledger_from -> ((msg = 104258486882956137302003298615310574437) && (after_ledger_from.tokens < value))
+   | _ -> true
+   end
+  }
+  raises {
+   Fail2 msg ->
+   [@expl:f1]
+   match Allowance.get ((from , _s._caller)) _s._allowance_assets with
+   | Some after_allowance_from_caller -> ((((msg = ((6832684196361413414224070523957886298514277 , (value , after_allowance_from_caller.amount)))) && ((_s._caller) <> from))) && (after_allowance_from_caller.amount < value))
+   | _ -> false
+   end
+  }
+  requires {
+    [@expl:entry_require]
+    _s._entry = (Some ETransfer)
+  }
+  requires {
+   [@expl:empty_ops]
+   _s._ops = L.Nil
+  }
+  requires {
+   [@expl:empty_trace]
+   _s._tr = L.Nil
+  }
+  requires {
+   [@expl:require_allowance_added_isempty]
+   Allowance.is_empty _s._allowance_assets_added
+  }
+  requires {
+   [@expl:allowance_removed_isempty]
+   Allowance.is_empty _s._allowance_assets_removed
+  }
+  requires {
+   [@expl:require_ledger_added_isempty]
+   Ledger.is_empty _s._ledger_assets_added
+  }
+  requires {
+   [@expl:ledger_removed_isempty]
+   Ledger.is_empty _s._ledger_assets_removed
+  }
+  ensures {
+    [@expl:transfer_p1]
+    from <> _to ->
+    match Ledger.get from (old _s)._ledger_assets with
+    | Some before_ledger_from -> match Ledger.get from _s._ledger_assets with
+                                 | Some after_ledger_from -> after_ledger_from = ({ before_ledger_from with
+                                   tokens = abs (before_ledger_from.tokens - value)
+                                 })
+                                 | _ -> false
+                                 end
+    | _ -> false
+    end
+  }
+  ensures {
+    [@expl:transfer_p2]
+    from <> _to ->
+    match Ledger.get _to _s._ledger_assets with
+    | Some after_ledger_to -> match Ledger.get _to (old _s)._ledger_assets with
+                              | Some before_ledger_to -> after_ledger_to = ({ before_ledger_to with
+                                tokens = before_ledger_to.tokens + value
+                              })
+                              | _ -> after_ledger_to = ({
+                                holder = _to;
+                                tokens = value
+                              })
+                              end
+    | _ -> false
+    end
+  }
+  ensures {
+    [@expl:transfer_p3]
+    from = _to ->
+    Ledger.eq _s._ledger_assets (old _s)._ledger_assets
+  }
+  ensures {
+    [@expl:transfer_p4]
+    forall tokenholder : ledger.
+    Ledger.mem tokenholder _s._ledger_assets ->
+    tokenholder.holder <> from ->
+    tokenholder.holder <> _to ->
+    (Ledger.get tokenholder.holder _s._ledger_assets) = (Some tokenholder)
+  }
+  ensures {
+    [@expl:transfer_p5]
+    Ledger.is_empty _s._ledger_assets_removed
+  }
+  ensures {
+    [@expl:transfer_p6]
+    match Ledger.get _to (old _s)._ledger_assets with
+    | Some before_to -> Ledger.is_empty _s._ledger_assets_added
+    | _ -> Ledger.eq _s._ledger_assets_added (Ledger.from_list (L.Cons ({
+      holder = _to;
+      tokens = value
+    }) (L.Nil)))
+    end
+  }
+  ensures {
+    [@expl:transfer_p7]
+    (_s._caller) <> from ->
+    match Allowance.get ((from , _s._caller)) (old _s)._allowance_assets with
+    | Some before_from_caller -> match Allowance.get ((from , _s._caller)) _s._allowance_assets with
+                                 | Some after_from_caller -> before_from_caller.amount > value ->
+                                                             after_from_caller = ({ before_from_caller with
+                                                               amount = abs (before_from_caller.amount - value)
+                                                             })
+                                 | _ -> false
+                                 end
+    | _ -> true
+    end
+  }
+  ensures {
+    [@expl:transfer_p8]
+    (_s._caller) = from ->
+    Allowance.eq _s._allowance_assets (old _s)._allowance_assets
+  }
+  ensures {
+    [@expl:transfer_p9]
+    forall a : allowance.
+    Allowance.mem a _s._allowance_assets ->
+    (((nth1_of_2 a.addr_owner_addr_spender) <> from) && ((nth2_of_2 a.addr_owner_addr_spender) <> (_s._caller))) ->
+    (Allowance.get ((nth1_of_2 a.addr_owner_addr_spender , nth2_of_2 a.addr_owner_addr_spender)) _s._allowance_assets) = (Some a)
+  }
+  ensures {
+    [@expl:transfer_p10]
+    ((Allowance.is_empty _s._allowance_assets_removed) && (Allowance.is_empty _s._allowance_assets_added))
+  }
+  ensures {
+    [@expl:transfer_p11]
+    (List0.card _s._ops) = 0
+  }
+  = let _s_init = _cp_storage (_s) in
+    if not ((match Ledger.get from _s._ledger_assets with
+             | Some v -> v
+             | _ -> _s <- _cp_storage (_s_init);
+                    raise NotFound
+             end).tokens >= value) then begin
+      _s <- _cp_storage (_s_init);
+      raise Fail1 104258486882956137302003298615310574437
+    end;
+    if not (str_eq (_s._caller) from) then begin
+      let current = (match Allowance.get ((from , _s._caller)) _s._allowance_assets with
+                     | Some v -> v
+                     | _ -> _s <- _cp_storage (_s_init);
+                            raise NotFound
+                     end).amount in
+      if current <= value then begin
+        _s <- _cp_storage (_s_init);
+        raise Fail2 (6832684196361413414224070523957886298514277 , (value , current))
+      end;
+      let allowance_ = match Allowance.get ((from , _s._caller)) _s._allowance_assets with
+                       | Some v -> v
+                       | _ -> _s <- _cp_storage (_s_init);
+                              raise NotFound
+                       end in
+      let allowance_ = {
+        addr_owner_addr_spender = allowance_.addr_owner_addr_spender;
+        amount = if allowance_.amount - value >= 0 then begin
+                   abs (allowance_.amount - value)
+                 end else begin
+                   _s <- _cp_storage (_s_init);
+                   raise NegAssignNat
+                 end
+      } in
+      _s._allowance_assets <- Allowance.set ((from , _s._caller)) allowance_ _s._allowance_assets;
+      _s._tr <- L.Cons (Tr.TrUpdate_ (FAmount)) _s._tr
+    end;
+    let ledger_ = match Ledger.get from _s._ledger_assets with
+                  | Some v -> v
+                  | _ -> _s <- _cp_storage (_s_init);
+                         raise NotFound
+                  end in
+    let ledger_ = {
+      holder = ledger_.holder;
+      tokens = if ledger_.tokens - value >= 0 then begin
+                 abs (ledger_.tokens - value)
+               end else begin
+                 _s <- _cp_storage (_s_init);
+                 raise NegAssignNat
+               end
+    } in
+    _s._ledger_assets <- Ledger.set from ledger_ _s._ledger_assets;
+    _s._tr <- L.Cons (Tr.TrUpdate_ (FTokens)) _s._tr;
+    if Ledger.contains _to _s._ledger_assets then begin
+      let ledger_ = match Ledger.get _to _s._ledger_assets with
+                    | Some v -> v
+                    | _ -> _s <- _cp_storage (_s_init);
+                           raise NotFound
+                    end in
+      let ledger_ = {
+        holder = ledger_.holder;
+        tokens = ledger_.tokens + value
+      } in
+      _s._ledger_assets <- Ledger.set _to ledger_ _s._ledger_assets;
+      _s._tr <- L.Cons (Tr.TrUpdate_ (FTokens)) _s._tr
+    end else begin
+      match Ledger.get _to _s._ledger_assets with
+      | Some _ -> _s <- _cp_storage (_s_init);
+                  raise KeyExist
+      | _ -> _s._ledger_assets <- Ledger.add ({
+               holder = _to;
+               tokens = 0 + value
+             }) _s._ledger_assets;
+             _s._ledger_assets_added <- Ledger.add ({
+               holder = _to;
+               tokens = 0 + value
+             }) _s._ledger_assets_added
+      end;
+      _s._tr <- L.Cons (Tr.TrAdd_ (ALedger)) _s._tr
+    end
+
+  let approve (spender : address) (value : nat) : unit
+  raises { Fail3 }
+  raises { NotFound }
+  raises { KeyExist }
+  raises {
+   Fail3 msg ->
+   [@expl:f2]
+   match Allowance.get ((_s._caller , spender)) _s._allowance_assets with
+   | Some allowance_caller_spender -> ((((msg = ((124858201228350329949281238382074300372661916559205 , allowance_caller_spender.amount))) && (value > 0))) && (allowance_caller_spender.amount > 0))
+   | _ -> false
+   end
+  }
+  requires {
+    [@expl:entry_require]
+    _s._entry = (Some EApprove)
+  }
+  requires {
+   [@expl:empty_ops]
+   _s._ops = L.Nil
+  }
+  requires {
+   [@expl:empty_trace]
+   _s._tr = L.Nil
+  }
+  requires {
+   [@expl:require_allowance_added_isempty]
+   Allowance.is_empty _s._allowance_assets_added
+  }
+  requires {
+   [@expl:allowance_removed_isempty]
+   Allowance.is_empty _s._allowance_assets_removed
+  }
+  requires {
+   [@expl:require_ledger_added_isempty]
+   Ledger.is_empty _s._ledger_assets_added
+  }
+  requires {
+   [@expl:ledger_removed_isempty]
+   Ledger.is_empty _s._ledger_assets_removed
+  }
+  ensures {
+    [@expl:approve_p1]
+    match Allowance.get ((_s._caller , spender)) _s._allowance_assets with
+    | Some after_allowance_caller_spender -> match Allowance.get ((_s._caller , spender)) (old _s)._allowance_assets with
+                                             | Some before_allowance_caller_spender -> after_allowance_caller_spender = ({ before_allowance_caller_spender with
+                                               amount = value
+                                             })
+                                             | _ -> after_allowance_caller_spender = ({
+                                               addr_owner_addr_spender = (_s._caller , spender);
+                                               amount = value
+                                             })
+                                             end
+    | _ -> false
+    end
+  }
+  ensures {
+    [@expl:approve_p2]
+    forall a : allowance.
+    Allowance.mem a _s._allowance_assets ->
+    ((nth1_of_2 a.addr_owner_addr_spender , nth2_of_2 a.addr_owner_addr_spender)) <> ((_s._caller , spender)) ->
+    (Allowance.get ((nth1_of_2 a.addr_owner_addr_spender , nth2_of_2 a.addr_owner_addr_spender)) _s._allowance_assets) = (Some a)
+  }
+  ensures {
+    [@expl:approve_p3]
+    match Allowance.get ((_s._caller , spender)) (old _s)._allowance_assets with
+    | Some allowance_caller_spender -> Allowance.is_empty _s._allowance_assets_added
+    | _ -> Allowance.eq _s._allowance_assets_added (Allowance.from_list (L.Cons ({
+      addr_owner_addr_spender = (_s._caller , spender);
+      amount = value
+    }) (L.Nil)))
+    end
+  }
+  ensures {
+    [@expl:approve_p4]
+    Allowance.is_empty _s._allowance_assets_removed
+  }
+  ensures {
+    [@expl:approve_p5]
+    Ledger.eq _s._ledger_assets (old _s)._ledger_assets
+  }
+  ensures {
+    [@expl:approve_p6]
+    (List0.card _s._ops) = 0
+  }
+  = let _s_init = _cp_storage (_s) in
+    let k = (_s._caller , spender) in
+    if Allowance.contains k _s._allowance_assets then begin
+      let previous = (match Allowance.get k _s._allowance_assets with
+                      | Some v -> v
+                      | _ -> _s <- _cp_storage (_s_init);
+                             raise NotFound
+                      end).amount in
+      if ((previous > 0) && (value > 0)) then begin
+        _s <- _cp_storage (_s_init);
+        raise Fail3 (124858201228350329949281238382074300372661916559205 , previous)
+      end
+    end;
+    if Allowance.contains k _s._allowance_assets then begin
+      let allowance_ = match Allowance.get k _s._allowance_assets with
+                       | Some v -> v
+                       | _ -> _s <- _cp_storage (_s_init);
+                              raise NotFound
+                       end in
+      let allowance_ = {
+        addr_owner_addr_spender = allowance_.addr_owner_addr_spender;
+        amount = value
+      } in
+      _s._allowance_assets <- Allowance.set k allowance_ _s._allowance_assets;
+      _s._tr <- L.Cons (Tr.TrUpdate_ (FAmount)) _s._tr
+    end else begin
+      match Allowance.get k _s._allowance_assets with
+      | Some _ -> _s <- _cp_storage (_s_init);
+                  raise KeyExist
+      | _ -> _s._allowance_assets <- Allowance.add ({
+               addr_owner_addr_spender = k;
+               amount = value
+             }) _s._allowance_assets;
+             _s._allowance_assets_added <- Allowance.add ({
+               addr_owner_addr_spender = k;
+               amount = value
+             }) _s._allowance_assets_added
+      end;
+      _s._tr <- L.Cons (Tr.TrAdd_ (AAllowance)) _s._tr
+    end
+end
+

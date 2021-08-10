@@ -10,5 +10,5 @@ sudo cp z3 /usr/bin
 why3 config --detect
 sudo apt install yaru-* -y
 sudo mkdir /home/gitpod/.config/gtk-3.0
-sudo cp -f ./settings/setting.ini /home/gitpod/.config/gtk-3.0/settings.ini
+sudo cp -f ./settings/settings.ini /home/gitpod/.config/gtk-3.0/settings.ini
 sudo cp ./settings/.why3.conf /home/gitpod/.why3.conf
