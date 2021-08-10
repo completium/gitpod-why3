@@ -6,3 +6,7 @@ tasks:
 ports:
 - port: 3000
   onOpen: open-browser
+vscode:
+  extensions:
+    - edukera.archetype@0.38.0
+    - baking-bad.michelson@0.1.0
